@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, type SyntheticEvent } from "react";
 import type { GetMoviesResponseItemDto, AddMovieRequestDto, RecommendMoviesRequestDto } from "../types";
-import { getMovies, rateMovie, addMovie, recommendMovies } from "../api";
+import { getMovies, rateMovie, addMovie, recommendMovies, removeMovie } from "../api";
 import { AxiosError } from "axios";
 import type { ExceptionResponseDto } from "../types";
 import { mapErrorCode } from "../utils/mapErrorCode";
@@ -65,6 +65,24 @@ export const Movies = () => {
             console.error("Failed to logout.", error);
         }
     };
+
+    const handleRemoveMovie = async (movieId: number) => {
+        try {
+            await removeMovie(movieId);
+
+            setMovies(prevMovies => prevMovies.filter(movie => movie.movieId !== movieId));
+        } catch (error) {
+            console.error("Failed to remove movie.", error);
+        }
+    };
+
+    const aiResponseRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (aiResponseRef.current) {
+            aiResponseRef.current.scrollTop = aiResponseRef.current.scrollHeight;
+        }
+    }, [aiResponse]);
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -230,8 +248,6 @@ export const Movies = () => {
                 <div className="flex flex-col flex-1 min-w-0 min-h-0 border-r border-transparent lg:border-slate-800 lg:pr-4">
                     <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between shrink-0 gap-4">
                         <h1 className="text-3xl font-bold text-white tracking-tight">My watchlist</h1>
-
-                        {/* Grupul din dreapta: Search + Logout */}
                         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                             <div className="relative w-full sm:w-72">
                                 <input
@@ -304,9 +320,26 @@ export const Movies = () => {
                                                     )}
                                                 </div>
                                             </div>
-                                            <button onClick={() => setExpandedMovieId(expandedMovieId === movie.movieId ? null : movie.movieId)} className="flex items-center justify-center h-8 w-8 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition-colors bg-[#111827] border border-slate-700 rounded-lg shrink-0 focus:outline-none">
-                                                <svg className={`w-4 h-4 text-current transition-transform duration-200 ${expandedMovieId === movie.movieId ? 'rotate-180' : ''}`} aria-hidden="true"><use href="/icons.svg#icon-chevron-down"></use></svg>
-                                            </button>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <button
+                                                    onClick={() => handleRemoveMovie(movie.movieId)}
+                                                    title="Remove movie"
+                                                    className="flex items-center justify-center h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors bg-[#111827] border border-slate-700 rounded-lg focus:outline-none"
+                                                >
+                                                    <svg className="w-4 h-4 text-current" aria-hidden="true">
+                                                        <use href="/icons.svg#icon-trash"></use>
+                                                    </svg>
+                                                </button>
+
+                                                <button
+                                                    onClick={() => setExpandedMovieId(expandedMovieId === movie.movieId ? null : movie.movieId)}
+                                                    className="flex items-center justify-center h-8 w-8 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition-colors bg-[#111827] border border-slate-700 rounded-lg focus:outline-none"
+                                                >
+                                                    <svg className={`w-4 h-4 text-current transition-transform duration-200 ${expandedMovieId === movie.movieId ? 'rotate-180' : ''}`} aria-hidden="true">
+                                                        <use href="/icons.svg#icon-chevron-down"></use>
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
                                         {expandedMovieId === movie.movieId && (
                                             <div className="mt-4 pt-4 border-t border-slate-700 text-sm space-y-2 text-slate-400">
@@ -460,7 +493,7 @@ export const Movies = () => {
                                 ) : "Ask AI"}
                             </button>
                         </div>
-                        <div className="flex-1 bg-[#1F2937] border border-slate-700 rounded-xl p-4 overflow-y-auto custom-scrollbar mt-2 relative">
+                        <div ref={aiResponseRef} className="flex-1 bg-[#1F2937] border border-slate-700 rounded-xl p-4 overflow-y-auto custom-scrollbar mt-2 relative">
                             {aiResponse ? (
                                 <div className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
                                     {aiResponse}
