@@ -4,6 +4,7 @@ import { getMovies, rateMovie, addMovie, recommendMovies } from "../api";
 import { AxiosError } from "axios";
 import type { ExceptionResponseDto } from "../types";
 import { mapErrorCode } from "../utils/mapErrorCode";
+import { useAuth } from "../hooks/useAuth";
 
 const AVAILABLE_GENRES = [
     "Action", "Adventure", "Comedy", "Drama", "Horror",
@@ -54,6 +55,16 @@ export const Movies = () => {
     const [isRecommending, setIsRecommending] = useState(false);
 
     const recommendGenreRef = useRef<HTMLDivElement>(null);
+
+    const { logout } = useAuth();
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.error("Failed to logout.", error);
+        }
+    };
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -219,17 +230,32 @@ export const Movies = () => {
                 <div className="flex flex-col flex-1 min-w-0 min-h-0 border-r border-transparent lg:border-slate-800 lg:pr-4">
                     <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between shrink-0 gap-4">
                         <h1 className="text-3xl font-bold text-white tracking-tight">My watchlist</h1>
-                        <div className="relative w-full sm:w-72">
-                            <input
-                                type="text"
-                                placeholder="Search by title..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#111827] border border-slate-700 text-slate-300 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder:text-slate-500"
-                            />
-                            <svg className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 transform -translate-y-1/2" aria-hidden="true">
-                                <use href="/icons.svg#icon-search"></use>
-                            </svg>
+
+                        {/* Grupul din dreapta: Search + Logout */}
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                            <div className="relative w-full sm:w-72">
+                                <input
+                                    type="text"
+                                    placeholder="Search by title..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-[#111827] border border-slate-700 text-slate-300 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder:text-slate-500"
+                                />
+                                <svg className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 transform -translate-y-1/2" aria-hidden="true">
+                                    <use href="/icons.svg#icon-search"></use>
+                                </svg>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                title="Log out"
+                                className="flex items-center justify-center gap-2 w-full sm:w-auto bg-[#1F2937] hover:bg-red-500/10 text-slate-400 hover:text-red-400 border border-slate-700 hover:border-red-500/30 rounded-lg px-4 py-2 text-sm transition-all focus:outline-none shrink-0"
+                            >
+                                <svg className="w-4 h-4 shrink-0" aria-hidden="true">
+                                    <use href="/icons.svg#icon-logout"></use>
+                                </svg>
+                                <span>Logout</span>
+                            </button>
                         </div>
                     </div>
                     <div className="bg-[#111827] border border-slate-800 rounded-2xl shadow-[0_0_40px_rgba(8,_112,_184,_0.07)] flex flex-col flex-1 min-h-0 overflow-hidden mb-6">
